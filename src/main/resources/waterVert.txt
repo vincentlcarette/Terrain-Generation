@@ -1,0 +1,51 @@
+#version 330 core
+
+// Positions/Coordinates
+layout (location = 0) in vec3 aPos;
+// Position of corresponding vertex of terrain
+layout (location = 1) in vec3 abovePos;
+// Texture Coordinates
+layout (location = 2) in vec2 aTex;
+
+
+out vec3 terrainPos;
+out vec3 position;
+// Outputs the texture coordinates to the fragment shader
+out vec2 texCoord;
+
+// Controls the scale of the vertices
+uniform float scale;
+
+// Inputs the matrices needed for 3D viewing with perspective
+uniform mat4 model;
+uniform mat4 cam;
+uniform float time;
+uniform float height;
+uniform float frequency;
+float amplitudes[] = float[](1.0, 0.7, 1.4, 2.0, 1.2, 0.3);
+float frequencies[] = float[](1.4, 5.6, 18.0, 4.0, 7.0, 10.3);
+float phases[] = float[](0.0, 0.2, 0.65, 1.0, 0.15, 0.55);
+
+
+void main()
+{
+	// h is the Y-offset of the current pixel
+	float h = 0.0f;
+	for (int i = 0; i < amplitudes.length(); i++) {
+		 h += amplitudes[i] * sin(frequencies[i] * frequency * aPos.x + phases[i] + time) *
+		 	sin(frequencies[i] * frequency * aPos.z + phases[i] + time);
+	}
+	h /= amplitudes.length();
+	h *= height;
+	// Give the final position of the vertex to OpenGL
+	// You must multiply the position by a model and camera matrix
+	// The model matrix controls the world transformations of the object
+	// The camera matrix projects the vertex to the camera
+	gl_Position = cam * model * vec4(aPos + vec3(0.0, h, 0.0), 1.0);
+	// Gives the corresponding terrain position to the fragment shader
+	terrainPos = abovePos;
+	// Gives the vertex position to the fragment shader
+	position = aPos + vec3(0.0, h, 0.0);
+	// Gives the texture coordinates to the fragment shader
+	texCoord = aTex;
+}
